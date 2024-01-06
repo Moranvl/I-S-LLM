@@ -3,6 +3,7 @@ The shopfloor Class is used to generate a shopfloor by files.
 The shopfloor is the basic of this environment.
 """
 from intelligent_shopfloor_environment.machine import Machine
+from intelligent_shopfloor_environment.timer import TimeController
 
 
 class ShopFloor:
@@ -12,6 +13,7 @@ class ShopFloor:
     def __init__(self):
         """Initialize the Shopfloor class."""
         self.machines: tuple or None = None
+        self.timer = TimeController()
 
     def generate_shopfloor(self, machine_list: list):
         """
@@ -26,5 +28,3 @@ class ShopFloor:
             )
             for m_type, m_num in enumerate(machine_list)
         )
-
-
