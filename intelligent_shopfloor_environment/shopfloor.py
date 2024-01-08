@@ -11,6 +11,7 @@ class ShopFloor:
     """
     The Shopfloor class.
     """
+
     def __init__(self, init_file: str = ""):
         """Initialize the Shopfloor class."""
         # Save the initial parameters.
@@ -22,7 +23,7 @@ class ShopFloor:
         self.timer = TimeController(self)
 
         # Initialize the Shopfloor.
-        self. initialize_shopfloor()
+        self.initialize_shopfloor()
 
     # region Initialization
     def initialize_shopfloor(self) -> None:
@@ -31,15 +32,21 @@ class ShopFloor:
         self.generate_warehouse = WareHouse(part_template=self.generateParts(part_information))
         self.machines = self.generate_machines(machine_information)
 
-    @staticmethod
-    def generate_machines(machine_len: int) -> tuple[Machine, ...]:
+        # Initialize the TimeController
+        self.timer.attach(self.generate_warehouse)
+        [self.timer.attach(m) for m in self.machines]
+
+    def generate_machines(self, machine_len: int) -> tuple[Machine, ...]:
         """
         Generate the shopfloor from files.
         - machine_len: It should be an integer.
         :return:
         - machine_tuple: tuple of machines.
         """
-        return tuple(Machine(machine_id=i) for i in range(1, machine_len+1))
+        return tuple(
+            Machine(timer=self.timer, machine_id=i)
+            for i in range(1, machine_len + 1)
+        )
 
     @staticmethod
     def generateParts(part_information: list[tuple[dict]]):
