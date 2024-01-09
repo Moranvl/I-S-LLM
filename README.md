@@ -1,2 +1,2 @@
 # I-S-LLM
-Intelligent Shopfloor based on LLM
+Intelligent ShopFloor based on LLM
