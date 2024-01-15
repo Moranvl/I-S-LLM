@@ -4,7 +4,7 @@ The shopfloor is the basic of this environment.
 """
 from intelligent_shopfloor_environment.machine import Machine, WareHouse
 from intelligent_shopfloor_environment.timer import TimeController
-from intelligent_shopfloor_environment.part import Part
+from intelligent_shopfloor_environment.part import Part, OverPartBuffer
 
 
 class ShopFloor:
@@ -20,6 +20,7 @@ class ShopFloor:
         # Initialize the variables.
         self.machines: tuple or None = None
         self.generate_warehouse: WareHouse or None = None
+        self.over_parts: OverPartBuffer = OverPartBuffer()
         self.timer = TimeController(self)
 
         # Initialize the Shopfloor.
@@ -29,8 +30,12 @@ class ShopFloor:
     def initialize_shopfloor(self) -> None:
         """Initialize the Shopfloor class"""
         machine_information, part_information = self.file2environment(self.init_file)
-        self.generate_warehouse = WareHouse(part_template=self.generateParts(part_information))
+        self.generate_warehouse = WareHouse(
+            timer=self.timer, part_template=self.generateParts(part_information), over_part_buffer=self.over_parts
+        )
+        # initialize the machiens
         self.machines = self.generate_machines(machine_information)
+        [m.defineMachine(self.machines) for m in self.machines]
 
         # Initialize the TimeController
         self.timer.attach(self.generate_warehouse)
@@ -44,7 +49,7 @@ class ShopFloor:
         - machine_tuple: tuple of machines.
         """
         return tuple(
-            Machine(timer=self.timer, machine_id=i)
+            Machine(timer=self.timer, over_part_buffer=self.over_parts, machine_id=i)
             for i in range(1, machine_len + 1)
         )
 
@@ -60,6 +65,7 @@ class ShopFloor:
         - machine_information: The length of the machines.
         - part_infomation: The information of parts.[({}, {}, {}), (), ()]
         """
+        # Need to judge if any part's length is 0 or even negative integer number.
         part_infomation = list()
         machine_information = 0
         return machine_information, part_infomation

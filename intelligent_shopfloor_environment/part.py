@@ -24,6 +24,10 @@ class Part:
         """Operate the part."""
         self.processes_index += 1
 
+    def getProcessingTime(self, machine_index: int) -> int:
+        """get the processing time of the part"""
+        return self.processes_tuple[self.processes_index][machine_index]
+
 
 class PartBuffer:
     """The part buffer to save parts."""
@@ -42,3 +46,15 @@ class PartBuffer:
 
     def isEmpty(self) -> bool:
         return len(self.buffer_list) == 0
+
+
+class OverPartBuffer:
+    """Sotre the over parts."""
+
+    def __init__(self):
+        self.buffer_list: list[Part] = list()
+        self.buffer_list_append = self.buffer_list.append
+
+    def addPart(self, part: Part) -> None:
+        """Add a part to the buffer"""
+        self.buffer_list_append(part)
