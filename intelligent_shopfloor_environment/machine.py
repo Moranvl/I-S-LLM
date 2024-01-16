@@ -1,7 +1,6 @@
 """
 The mechine class is used to generate a meachine to operate and process part.
 """
-from typing import override
 from intelligent_shopfloor_environment.part import Part, PartBuffer, OverPartBuffer
 from intelligent_shopfloor_environment.agent import Agent
 from intelligent_shopfloor_environment.timer import TimeController
@@ -146,10 +145,10 @@ class WareHouse(Machine):
         super().__init__(timer, over_part_buffer=over_part_buffer)
         self.part_template = part_template
 
-    @override
     def onTickTick(self, new_time: int):
         """
         Dispatching the part to the first machine.
+        @override
         :param new_time: time for now.
         :return:
         """
@@ -161,14 +160,13 @@ class WareHouse(Machine):
         index = self.agent_machine2machine.deside()
         self.machines[index].partIn(part)
 
-
-    def takePartFromBuffer(self) -> Part
+    def takePartFromBuffer(self) -> Part:
         return self.pre_buffer.takePart(0)
 
-    @override
     def onTickTickSecond(self, new_time: int):
         """
         Warehouse need not be called.
+        @override
         :param new_time: int
         :return:
         """

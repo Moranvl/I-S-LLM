@@ -41,6 +41,9 @@ class ShopFloor:
         self.timer.attach(self.generate_warehouse)
         [self.timer.attach(m) for m in self.machines]
 
+        # after initialization the timer
+        self.timer.lazy_init()
+
     def generate_machines(self, machine_len: int) -> tuple[Machine, ...]:
         """
         Generate the shopfloor from files.

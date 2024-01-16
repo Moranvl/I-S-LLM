@@ -1,17 +1,22 @@
 """
 the class of time controller
 """
-from intelligent_shopfloor_environment.machine import Machine, WareHouse
-from intelligent_shopfloor_environment.shopfloor import ShopFloor
 
 
 class TimeController:
-    def __init__(self, shopfloor_environment: ShopFloor):
-        """"Initializes a TimeController"""
+    def __init__(self, shopfloor_environment):
+        """
+        Initializes a TimeController
+        """
         self._time = -1
-        self._observers: set[Machine or WareHouse] = set()
+        # set contains machine or warehouse
+        self._observers: set = set()
         self.shopfloor = shopfloor_environment
         self.generate_warehouse = shopfloor_environment.generate_warehouse
+
+    def lazy_init(self):
+        """call after initialization, to avoid the None type of generate_warehouse"""
+        self.generate_warehouse = self.shopfloor.generate_warehouse
 
     @property
     def time(self):
@@ -20,7 +25,7 @@ class TimeController:
     @time.setter
     def time(self, new_time):
         self._time = new_time
-        self.shopfloor.generate_warehouse.onTickTick(new_time)
+        self.generate_warehouse.onTickTick(new_time)
         self.notifyFirst(new_time)
         self.notifySecond(new_time)
 

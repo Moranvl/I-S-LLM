@@ -1,7 +1,6 @@
 """
 The agent is used to generate an agent to decide whether meachine or part to operate.
 """
-from intelligent_shopfloor_environment.machine import Machine, WareHouse
 
 
 class Agent:
@@ -10,8 +9,12 @@ class Agent:
     """
 
     def __init__(
-            self, self_machine: Machine or WareHouse
+            self, self_machine,
     ):
+        """
+        Initialize the agent.
+        :param self_machine: Machine or Warehouse
+        """
         self.machine = self_machine
 
     def deside(self) -> int:
@@ -27,5 +30,5 @@ class Buffer2MachineAgent(Agent):
 
 
 class Machine2MachineAgent(Agent):
-    def __init__(self, self_machine: Machine or WareHouse):
+    def __init__(self, self_machine):
         super().__init__(self_machine)
