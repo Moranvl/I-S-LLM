@@ -1,0 +1,38 @@
+def partStr2Dict(info: list[int]) -> tuple[dict, ...]:
+    num_of_orders = info[0]
+    part_template_list = list()
+
+    processing_machine_num = 0
+    order_list: list[dict] = list()
+    index = 1
+    temp_index = 0
+    length_info = len(info)
+    while index < length_info:
+        processing_machine_num = info[index]
+
+        order_list.append(dict())
+        temp_index = index + 1
+        while temp_index < index + processing_machine_num * 2 + 1:
+            order_list[-1].update(
+                {info[temp_index]: info[temp_index + 1]}
+            )
+            temp_index += 2
+        index += processing_machine_num * 2 + 1
+    return tuple(order_list)
+
+
+def analysisDataFile(filename: str) -> tuple[int, list[tuple]]:
+    """read the file and split file into lines"""
+    with open(filename, "r") as file:
+        lines = [line.rstrip('\n') for line in file.readlines() if line.strip()]
+    # title = [num for num in lines[0].strip("\t")]
+    title = [int(num) for num in lines[0].split('\t')]
+    content = [line.strip().split() for line in lines[1:]]
+    content = [[int(num) for num in subcontent] for subcontent in content]
+    assert len(content) == title[0]
+
+    machine_num = title[1]
+    partTupleList = [partStr2Dict(element) for element in content]
+    assert len(partTupleList) == title[0]
+
+    return machine_num, partTupleList

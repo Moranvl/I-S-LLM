@@ -5,6 +5,8 @@ The shopfloor is the basic of this environment.
 from intelligent_shopfloor_environment.machine import Machine, WareHouse
 from intelligent_shopfloor_environment.timer import TimeController
 from intelligent_shopfloor_environment.part import Part, OverPartBuffer
+from intelligent_shopfloor_environment.agent import Agent
+from intelligent_shopfloor_environment.utils import analysisDataFile
 
 
 class ShopFloor:
@@ -12,19 +14,26 @@ class ShopFloor:
     The Shopfloor class.
     """
 
-    def __init__(self, init_file: str = ""):
-        """Initialize the Shopfloor class."""
+    def __init__(
+            self, init_file: str = "./dataset",
+    ):
+        """
+        Initialize the Shopfloor class.
+        Dataset information should contain "dataset_dir", "dataset_name", "file_name".
+        """
         # Save the initial parameters.
         self.init_file: str = init_file
 
         # Initialize the variables.
-        self.machines: tuple or None = None
+        self.machines: tuple[Machine] or None = None
         self.generate_warehouse: WareHouse or None = None
         self.over_parts: OverPartBuffer = OverPartBuffer()
         self.timer = TimeController(self)
 
         # Initialize the Shopfloor.
         self.initialize_shopfloor()
+        # Initialize the agents.
+        self.initialize_agents()
 
     # region Initialization
     def initialize_shopfloor(self) -> None:
@@ -36,6 +45,7 @@ class ShopFloor:
         # initialize the machiens
         self.machines = self.generate_machines(machine_information)
         [m.defineMachine(self.machines) for m in self.machines]
+        self.generate_warehouse.defineMachine(self.machines)
 
         # Initialize the TimeController
         self.timer.attach(self.generate_warehouse)
@@ -43,6 +53,15 @@ class ShopFloor:
 
         # after initialization the timer
         self.timer.lazy_init()
+
+    def initialize_agents(self) -> None:
+        """initial the agents"""
+        for m in self.machines:
+            m.defineAgent(buffer2machine_agent=Agent(m), machine2machine_agent=Agent(m))
+        self.generate_warehouse.defineAgent(
+            buffer2machine_agent=Agent(self.generate_warehouse),
+            machine2machine_agent=Agent(self.generate_warehouse),
+        )
 
     def generate_machines(self, machine_len: int) -> tuple[Machine, ...]:
         """
@@ -61,7 +80,8 @@ class ShopFloor:
         part_template = [Part(process_tuple=info_tuple) for info_tuple in part_information]
         return part_template
 
-    def file2environment(self, filename: str) -> tuple[int, list[tuple[dict]]]:
+    @staticmethod
+    def file2environment(filename: str) -> tuple[int, list[tuple[dict]]]:
         """
         - filename: the path or the name of file which include the infomation of shopfloor
         :return:
@@ -69,8 +89,7 @@ class ShopFloor:
         - part_infomation: The information of parts.[({}, {}, {}), (), ()]
         """
         # Need to judge if any part's length is 0 or even negative integer number.
-        part_infomation = list()
-        machine_information = 0
+        machine_information, part_infomation = analysisDataFile(filename)
         return machine_information, part_infomation
 
     # endregion
@@ -88,7 +107,7 @@ class ShopFloor:
         """
         over = False
         self.timer.start()
-        while over := self.isOver():
+        while not (over := self.isOver()):
             self.timer.tickTick()
 
     def getNextTimeStep(self) -> int:
@@ -107,3 +126,10 @@ class ShopFloor:
         over_list = [m.isOver() for m in self.machines]
         over_list.append(self.generate_warehouse.isOver())
         return all(over_list)
+
+
+class ShopfloorLLM(ShopFloor):
+    """this shopfloor is used to fullfill the llm"""
+    def __init__(self, init_file: str = ""):
+        super().__init__(init_file=init_file)
+

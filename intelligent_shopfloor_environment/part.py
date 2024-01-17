@@ -18,7 +18,7 @@ class Part:
 
     def isOver(self) -> bool:
         """check if the part is over"""
-        return self.processes_index < self.processes_len
+        return self.processes_index > self.processes_len
 
     def process(self) -> None:
         """Operate the part."""

@@ -19,8 +19,8 @@ class Machine:
         self._id = machine_id
         self.pre_buffer: PartBuffer = PartBuffer()
 
-        self.agent_buffer2machine: Agent = Agent(self)
-        self.agent_machine2machine: Agent = Agent(self)
+        self.agent_buffer2machine: Agent or None = None
+        self.agent_machine2machine: Agent or None = None
 
         # get the pointer of the machines.
         self.machines: tuple[Machine] or None = None
@@ -36,6 +36,13 @@ class Machine:
     def defineMachine(self, machines: tuple):
         """get the machines after the machine is generated."""
         self.machines = machines
+        self.agent_buffer2machine: Agent or None = None
+        self.agent_buffer2machine: Agent or None = None
+
+    def defineAgent(self, buffer2machine_agent: Agent, machine2machine_agent: Agent) -> None:
+        """define the agent."""
+        self.agent_buffer2machine = buffer2machine_agent
+        self.agent_machine2machine = machine2machine_agent
 
     # region First TickTick
     def onTickTick(self, new_time: int):
@@ -143,7 +150,7 @@ class WareHouse(Machine):
             over_part_buffer: OverPartBuffer,
     ):
         super().__init__(timer, over_part_buffer=over_part_buffer)
-        self.part_template = part_template
+        [self.pre_buffer.addPart(part) for part in part_template]
 
     def onTickTick(self, new_time: int):
         """
@@ -157,6 +164,7 @@ class WareHouse(Machine):
 
     def dispatchParts(self) -> None:
         part = self.takePartFromBuffer()
+        part.process()
         index = self.agent_machine2machine.deside()
         self.machines[index].partIn(part)
 
