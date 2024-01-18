@@ -28,6 +28,10 @@ class Part:
         """get the processing time of the part"""
         return self.processes_tuple[self.processes_index][machine_index]
 
+    def getNowTimeDict(self) -> dict:
+        """get the time dictionary now"""
+        return self.processes_tuple[self.processes_index]
+
 
 class PartBuffer:
     """The part buffer to save parts."""

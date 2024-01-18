@@ -5,7 +5,7 @@ The shopfloor is the basic of this environment.
 from intelligent_shopfloor_environment.machine import Machine, WareHouse
 from intelligent_shopfloor_environment.timer import TimeController
 from intelligent_shopfloor_environment.part import Part, OverPartBuffer
-from intelligent_shopfloor_environment.agent import Agent
+from intelligent_shopfloor_environment.agent import Agent, Buffer2MachineAgent, Machine2MachineAgent, WarseHouseAgent
 from intelligent_shopfloor_environment.utils import analysisDataFile
 
 
@@ -57,10 +57,10 @@ class ShopFloor:
     def initialize_agents(self) -> None:
         """initial the agents"""
         for m in self.machines:
-            m.defineAgent(buffer2machine_agent=Agent(m), machine2machine_agent=Agent(m))
+            m.defineAgent(buffer2machine_agent=Buffer2MachineAgent(m), machine2machine_agent=Machine2MachineAgent(m))
         self.generate_warehouse.defineAgent(
             buffer2machine_agent=Agent(self.generate_warehouse),
-            machine2machine_agent=Agent(self.generate_warehouse),
+            machine2machine_agent=WarseHouseAgent(self.generate_warehouse),
         )
 
     def generate_machines(self, machine_len: int) -> tuple[Machine, ...]:

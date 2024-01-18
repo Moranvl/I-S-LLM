@@ -60,7 +60,7 @@ class Machine:
             self.over_part_buffer.addPart(part)
         else:
             # Add part to other machine.
-            index = self.agent_machine2machine.deside()
+            index = self.agent_machine2machine.decide()
             self.machines[index].partIn(part)
         # Clear the part.
         self.operate_part = None
@@ -77,7 +77,7 @@ class Machine:
             self.choosePart2Machine(new_time)
 
     def choosePart2Machine(self, new_time: int) -> None:
-        index = self.agent_machine2machine.deside()
+        index = self.agent_buffer2machine.decide()
         part = self.pre_buffer.takePart(index)
 
         #
@@ -97,10 +97,6 @@ class Machine:
             return 0
         else:
             return self.part_over_time - self.timer.time
-
-    def processes(self):
-        """operate the part"""
-        pass
 
     def reset(self):
         pass
@@ -165,7 +161,7 @@ class WareHouse(Machine):
     def dispatchParts(self) -> None:
         part = self.takePartFromBuffer()
         part.process()
-        index = self.agent_machine2machine.deside()
+        index = self.agent_machine2machine.decideByPart(part)
         self.machines[index].partIn(part)
 
     def takePartFromBuffer(self) -> Part:
