@@ -242,3 +242,4 @@ fabric.properties
 
 /intelligent_shopfloor_environment/.$IS.drawio.bkp
 *.dtmp
+/test.py

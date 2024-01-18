@@ -51,9 +51,9 @@ class Machine:
         Dispatch over part to other machine or store.
         """
         if self.isMachineNeedDispatch(new_time):
-            self.dispatchOverPart()
+            self.dispatchOverPart(new_time)
 
-    def dispatchOverPart(self):
+    def dispatchOverPart(self, new_time: int):
         part = self.operate_part
         part.process()
         if part.isOver():
@@ -64,6 +64,7 @@ class Machine:
             self.machines[index].partIn(part)
         # Clear the part.
         self.operate_part = None
+        part.saveEndTime(new_time)
 
     # endregion
 
@@ -77,6 +78,7 @@ class Machine:
             self.choosePart2Machine(new_time)
 
     def choosePart2Machine(self, new_time: int) -> None:
+        """part in machine"""
         index = self.agent_buffer2machine.decide()
         part = self.pre_buffer.takePart(index)
 
@@ -84,6 +86,7 @@ class Machine:
         self.part_over_time = new_time + part.getProcessingTime(self._id)
         # assign part to the machine.
         self.operate_part = part
+        (part.saveMachineID(self._id), part.saveStartTime(new_time))
 
     # endregion
 

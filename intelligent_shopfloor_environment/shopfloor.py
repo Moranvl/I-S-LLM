@@ -77,7 +77,10 @@ class ShopFloor:
 
     @staticmethod
     def generateParts(part_information: list[tuple[dict]]):
-        part_template = [Part(process_tuple=info_tuple) for info_tuple in part_information]
+        part_template = [
+            Part(index=index, process_tuple=info_tuple)
+            for index, info_tuple in enumerate(part_information)
+        ]
         return part_template
 
     @staticmethod
@@ -109,6 +112,9 @@ class ShopFloor:
         self.timer.start()
         while not (over := self.isOver()):
             self.timer.tickTick()
+
+    def plotData(self):
+        self.over_parts.plotData(len(self.machines))
 
     def getNextTimeStep(self) -> int:
         """

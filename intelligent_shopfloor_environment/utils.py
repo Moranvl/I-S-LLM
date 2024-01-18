@@ -1,3 +1,7 @@
+import matplotlib.pyplot as plt
+
+
+# region Analysis the Files
 def partStr2Dict(info: list[int]) -> tuple[dict, ...]:
     num_of_orders = info[0]
     part_template_list = list()
@@ -36,3 +40,22 @@ def analysisDataFile(filename: str) -> tuple[int, list[tuple]]:
     assert len(partTupleList) == title[0]
 
     return machine_num, partTupleList
+
+
+# endregion
+
+# region Plot Gantt Figure
+def plot_gantt_one_part(
+        machine_id: list, start_steps: list, end_steps: list, part_index: int = 0, color: str = 'skyblue'
+):
+    """Plot gantt for one part"""
+    for order_index, (m_id, start, end) in enumerate(zip(machine_id, start_steps, end_steps)):
+        plt.barh(m_id-1, end - start, left=start, align='center', color=color, edgecolor="black")
+        plt.text(
+            start + (end - start) / 2 , m_id-1, f"{part_index},{order_index+1}",
+            ha="center", va='center', fontsize=8
+        )
+
+    max_time = max(end_steps)
+    return max_time
+# endregion
