@@ -1,6 +1,7 @@
 """
 The mechine class is used to generate a meachine to operate and process part.
 """
+from copy import deepcopy
 from intelligent_shopfloor_environment.part import Part, PartBuffer, OverPartBuffer
 from intelligent_shopfloor_environment.agent import Agent
 from intelligent_shopfloor_environment.timer import TimeController
@@ -102,7 +103,11 @@ class Machine:
             return self.part_over_time - self.timer.time
 
     def reset(self):
-        pass
+        self.pre_buffer.reset()
+
+        # Variables to save the state.
+        self.operate_part = None
+        self.part_over_time = 0
 
     def partIn(self, part: Part):
         """input the part"""
@@ -150,6 +155,7 @@ class WareHouse(Machine):
     ):
         super().__init__(timer, over_part_buffer=over_part_buffer)
         [self.pre_buffer.addPart(part) for part in part_template]
+        self.part_template = deepcopy(part_template)
 
     def onTickTick(self, new_time: int):
         """
@@ -178,3 +184,7 @@ class WareHouse(Machine):
         :return:
         """
         pass
+
+    def reset(self):
+        self.pre_buffer.reset()
+        [self.pre_buffer.addPart(part) for part in self.part_template]

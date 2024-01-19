@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+from matplotlib.colors import rgb2hex
+import numpy as np
 
 
 # region Analysis the Files
@@ -50,12 +52,24 @@ def plot_gantt_one_part(
 ):
     """Plot gantt for one part"""
     for order_index, (m_id, start, end) in enumerate(zip(machine_id, start_steps, end_steps)):
-        plt.barh(m_id-1, end - start, left=start, align='center', color=color, edgecolor="black")
+        plt.barh(m_id - 1, end - start, left=start, align='center', color=color, edgecolor="black")
         plt.text(
-            start + (end - start) / 2 , m_id-1, f"{part_index},{order_index+1}",
+            start + (end - start) / 2, m_id - 1, f"{part_index},{order_index + 1}",
             ha="center", va='center', fontsize=8
         )
 
     max_time = max(end_steps)
     return max_time
+
+
+def generate_distinct_colors(n):
+    """Get n colors"""
+    cmap_name = 'tab20' if n <= 20 else 'rainbow'
+    cmap = plt.colormaps[cmap_name]
+
+    if isinstance(cmap, str):  # 如果'n > 20'且所选cmap是一个字符串（需要实例化）
+        cmap = plt.colormaps.get_cmap(cmap, lut=n)  # 创建一个lut长度为n的新色彩映射表
+
+    colors = [rgb2hex(cmap(i)[:3]) for i in np.linspace(0, 1, min(n, cmap.N))]
+    return colors[:n]  # 返回前n种颜色
 # endregion

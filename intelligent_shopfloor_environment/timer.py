@@ -59,4 +59,4 @@ class TimeController:
         return self.shopfloor.getNextTimeStep()
 
     def reset(self):
-        self._time = 0
+        self._time = -1

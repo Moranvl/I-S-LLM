@@ -102,6 +102,7 @@ class ShopFloor:
         self.generate_warehouse.reset()
         [m.reset() for m in self.machines]
         self.timer.reset()
+        self.over_parts.reset()
 
     def run(self):
         """

@@ -2,7 +2,7 @@
 Define the parts and part buffer.
 """
 import matplotlib.pyplot as plt
-from intelligent_shopfloor_environment.utils import plot_gantt_one_part
+from intelligent_shopfloor_environment.utils import plot_gantt_one_part, generate_distinct_colors
 
 
 class Part:
@@ -67,6 +67,9 @@ class PartBuffer:
     def isEmpty(self) -> bool:
         return len(self.buffer_list) == 0
 
+    def reset(self):
+        self.buffer_list.clear()
+
 
 class OverPartBuffer:
     """Sotre the over parts."""
@@ -78,6 +81,9 @@ class OverPartBuffer:
     def addPart(self, part: Part) -> None:
         """Add a part to the buffer"""
         self.buffer_list_append(part)
+
+    def reset(self) -> None:
+        self.buffer_list.clear()
 
     def printData(self):
         for part in self.buffer_list:
@@ -97,10 +103,11 @@ class OverPartBuffer:
         # plt.grid(axis='x')
 
         max_time_list = list()
-        for part in self.buffer_list:
+        distinct_colors_hex = generate_distinct_colors(len(self.buffer_list))
+        for i, part in enumerate(self.buffer_list):
             max_time = plot_gantt_one_part(
                 part.processing_data[0], part.processing_data[1], part.processing_data[2],
-                part_index=part.index+1, color="skyblue"
+                part_index=part.index+1, color=distinct_colors_hex[i]
             )
             max_time_list.append(max_time)
         plt.xlim(0, max(max_time_list))

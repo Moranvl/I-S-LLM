@@ -5,6 +5,8 @@ if __name__ == '__main__':
     # print( analysisDataFile("./dataset/FJSSPinstances/1_Brandimarte/BrandimarteMk1.fjs") )
     sf = ShopfloorLLM("./dataset/FJSSPinstances/1_Brandimarte/BrandimarteMk1.fjs")
     sf.run()
+    sf.reset()
+    sf.run()
     data = sf.over_parts.printData()
     machine_processing = [list() for _ in range(6)]
     for part_processing_data in data:
