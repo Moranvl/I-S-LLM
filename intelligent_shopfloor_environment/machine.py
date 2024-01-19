@@ -154,8 +154,9 @@ class WareHouse(Machine):
             over_part_buffer: OverPartBuffer,
     ):
         super().__init__(timer, over_part_buffer=over_part_buffer)
-        [self.pre_buffer.addPart(part) for part in part_template]
-        self.part_template = deepcopy(part_template)
+        self.part_template = part_template
+        [self.pre_buffer.addPart(part) for part in deepcopy(self.part_template)]
+
 
     def onTickTick(self, new_time: int):
         """
@@ -187,4 +188,4 @@ class WareHouse(Machine):
 
     def reset(self):
         self.pre_buffer.reset()
-        [self.pre_buffer.addPart(part) for part in self.part_template]
+        [self.pre_buffer.addPart(part) for part in deepcopy(self.part_template)]
