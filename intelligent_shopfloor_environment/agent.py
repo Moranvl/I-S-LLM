@@ -32,11 +32,15 @@ class Buffer2MachineAgent(Agent):
         self.pre_buffer = self.machine.pre_buffer
 
     def decide(self) -> int:
-        return self.firstInFirstOut()
+        # return self.firstInFirstOut()
+        return self.firstInLastOut()
 
     @staticmethod
     def firstInFirstOut() -> int:
         return 0
+
+    def firstInLastOut(self) -> int:
+        return self.pre_buffer.getLength() - 1
 
 
 class Machine2MachineAgent(Agent):

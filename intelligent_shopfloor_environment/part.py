@@ -70,6 +70,10 @@ class PartBuffer:
     def reset(self):
         self.buffer_list.clear()
 
+    #region Get Information
+    def getLength(self) -> int:
+        return len(self.buffer_list)
+
 
 class OverPartBuffer:
     """Sotre the over parts."""

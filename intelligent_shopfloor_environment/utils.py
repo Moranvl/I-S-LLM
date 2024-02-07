@@ -50,7 +50,7 @@ def analysisDataFile(filename: str) -> tuple[int, list[tuple]]:
 def plot_gantt_one_part(
         machine_id: list, start_steps: list, end_steps: list, part_index: int = 0, color: str = 'skyblue'
 ):
-    """Plot gantt for one part"""
+    """Plot gantt for one part. All parts must be plotted in one figure."""
     for order_index, (m_id, start, end) in enumerate(zip(machine_id, start_steps, end_steps)):
         plt.barh(m_id - 1, end - start, left=start, align='center', color=color, edgecolor="black")
         plt.text(

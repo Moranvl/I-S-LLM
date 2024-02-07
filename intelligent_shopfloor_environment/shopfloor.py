@@ -1,6 +1,6 @@
 """
-The shopfloor Class is used to generate a shopfloor by files.
-The shopfloor is the basic of this environment.
+The shop floor Class is used to generate a shopfloor by files.
+The shop floor is the basic of this environment.
 """
 from intelligent_shopfloor_environment.machine import Machine, WareHouse
 from intelligent_shopfloor_environment.timer import TimeController
@@ -11,14 +11,14 @@ from intelligent_shopfloor_environment.utils import analysisDataFile
 
 class ShopFloor:
     """
-    The Shopfloor class.
+    The Shop floor class.
     """
 
     def __init__(
             self, init_file: str = "./dataset",
     ):
         """
-        Initialize the Shopfloor class.
+        Initialize the Shop-floor class.
         Dataset information should contain "dataset_dir", "dataset_name", "file_name".
         """
         # Save the initial parameters.
@@ -30,19 +30,19 @@ class ShopFloor:
         self.over_parts: OverPartBuffer = OverPartBuffer()
         self.timer = TimeController(self)
 
-        # Initialize the Shopfloor.
+        # Initialize the Shop-floor.
         self.initialize_shopfloor()
         # Initialize the agents.
         self.initialize_agents()
 
     # region Initialization
     def initialize_shopfloor(self) -> None:
-        """Initialize the Shopfloor class"""
+        """Initialize the Shop-floor class"""
         machine_information, part_information = self.file2environment(self.init_file)
         self.generate_warehouse = WareHouse(
             timer=self.timer, part_template=self.generateParts(part_information), over_part_buffer=self.over_parts
         )
-        # initialize the machiens
+        # initialize the machines
         self.machines = self.generate_machines(machine_information)
         [m.defineMachine(self.machines) for m in self.machines]
         self.generate_warehouse.defineMachine(self.machines)
