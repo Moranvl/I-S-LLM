@@ -1,4 +1,4 @@
-from intelligent_shopfloor_environment.shopfloor import ShopFloor, ShopfloorLLM
+from intelligent_shopfloor_environment.shopfloor import ShopFloor
 from intelligent_shopfloor_environment.utils import analysisDataFile
 
 
@@ -17,9 +17,9 @@ def print_sf_and_plot_gantt(shopfloor: ShopFloor):
 
 if __name__ == '__main__':
     # print( analysisDataFile("./dataset/FJSSPinstances/1_Brandimarte/BrandimarteMk1.fjs") )
-    sf = ShopfloorLLM("./dataset/FJSSPinstances/1_Brandimarte/BrandimarteMk1.fjs")
+    sf = ShopFloor("./dataset/FJSSPinstances/1_Brandimarte/BrandimarteMk1.fjs")
     sf.run()
-    print_sf_and_plot_gantt(sf)
+    # print_sf_and_plot_gantt(sf)
     # sf.reset()
     # sf.run()
     # # sf.reset()

@@ -113,6 +113,7 @@ class ShopFloor:
         self.timer.start()
         while not (over := self.isOver()):
             self.timer.tickTick()
+        print(f"End time step: {self.timer.time}")
 
     def plotData(self):
         self.over_parts.plotData(len(self.machines))
@@ -133,10 +134,4 @@ class ShopFloor:
         over_list = [m.isOver() for m in self.machines]
         over_list.append(self.generate_warehouse.isOver())
         return all(over_list)
-
-
-class ShopfloorLLM(ShopFloor):
-    """this shopfloor is used to fullfill the llm"""
-    def __init__(self, init_file: str = ""):
-        super().__init__(init_file=init_file)
 

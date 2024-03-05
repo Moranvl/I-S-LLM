@@ -33,7 +33,11 @@ class Machine:
         # Variables to save the state.
         self.operate_part: Part or None = None
         self.part_over_time: int = 0
+        # Utilization
+        self.accumulate_work_time: int = 0
+        self.part_start_time: int = 0
 
+    # region Definition
     def defineMachine(self, machines: tuple):
         """get the machines after the machine is generated."""
         self.machines = machines
@@ -44,6 +48,8 @@ class Machine:
         """define the agent."""
         self.agent_buffer2machine = buffer2machine_agent
         self.agent_machine2machine = machine2machine_agent
+
+    # endregion
 
     # region First TickTick
     def onTickTick(self, new_time: int):
@@ -66,6 +72,8 @@ class Machine:
         # Clear the part.
         self.operate_part = None
         part.saveEndTime(new_time)
+        # Something else to be processed after processing.
+        self.accumulate_work_time += new_time - self.part_start_time
 
     # endregion
 
@@ -83,14 +91,16 @@ class Machine:
         index = self.agent_buffer2machine.decide()
         part = self.pre_buffer.takePart(index)
 
-        #
         self.part_over_time = new_time + part.getProcessingTime(self._id)
         # assign part to the machine.
         self.operate_part = part
+        # Something else to be processed before processing.
         (part.saveMachineID(self._id), part.saveStartTime(new_time))
+        self.part_start_time = new_time
 
     # endregion
 
+    # region Get Information
     def needingTime(self) -> int:
         """
         Compute the next time step.
@@ -102,12 +112,24 @@ class Machine:
         else:
             return self.part_over_time - self.timer.time
 
+    def getUtilization(self) -> float:
+        t = self.timer.time
+        if self.isMachineFree():
+            return self.accumulate_work_time / t
+        else:
+            return (self.accumulate_work_time - self.part_start_time) / t + 1
+
+    # endregion
+
     def reset(self):
         self.pre_buffer.reset()
 
         # Variables to save the state.
         self.operate_part = None
         self.part_over_time = 0
+        # Utilization
+        self.accumulate_work_time = 0
+        self.part_start_time = 0
 
     def partIn(self, part: Part):
         """input the part"""
@@ -143,6 +165,30 @@ class Machine:
 
     # endregion
 
+    # region Servering Agent
+    def generateDocument(self, part: Part):
+        part_need_time = part.getProcessingTime(self._id)
+        free_or_busy = ""
+        eariliest_time = 0
+        if self.isMachineFree():
+            free_or_busy += "<free>."
+            eariliest_time += self.timer.time + part_need_time
+        else:
+            free_or_busy += f"<busy>, and I still need <{self.needingTime()}> time step to over this order."
+            eariliest_time += self.part_over_time + part_need_time
+        completion_rate_operations, completion_rate_jobs = self.pre_buffer.getCompletionRate()
+
+        prompt = f"""# Machine: {self._id}
+The state of my machine is {free_or_busy}
+The length of my buffer is {self.pre_buffer.getLength()}.
+My history utilization is <{self.getUtilization()}>.
+My average completion rate of operation is <{completion_rate_operations}>.
+My average completion rate of jobs is <{completion_rate_jobs}>.
+The eariliest time of this order over time step is <{eariliest_time}>.
+The processing time of this job on me is <{part_need_time}>."""
+        return prompt
+    # endregion
+
 
 class WareHouse(Machine):
     """Used to generate parts to be processed."""
@@ -156,7 +202,6 @@ class WareHouse(Machine):
         super().__init__(timer, over_part_buffer=over_part_buffer)
         self.part_template = part_template
         [self.pre_buffer.addPart(part) for part in deepcopy(self.part_template)]
-
 
     def onTickTick(self, new_time: int):
         """
@@ -175,6 +220,7 @@ class WareHouse(Machine):
         self.machines[index].partIn(part)
 
     def takePartFromBuffer(self) -> Part:
+        # Always take the first part in the buffer.
         return self.pre_buffer.takePart(0)
 
     def onTickTickSecond(self, new_time: int):
