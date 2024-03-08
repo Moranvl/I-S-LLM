@@ -1,8 +1,11 @@
 """
 Define the parts and part buffer.
 """
+import matplotlib
 import matplotlib.pyplot as plt
-from intelligent_shopfloor_environment.utils import plot_gantt_one_part, generate_distinct_colors
+from intelligent_shopfloor_environment.utils import (
+    plot_gantt_one_part, generate_distinct_colors, calculate_middle_value_in_gantt
+)
 
 
 class Part:
@@ -103,6 +106,12 @@ class PartBuffer:
             completion_rate_operations = sum_operation / sum_all_operations
             completion_rate_jobs /= len_buffer
         return completion_rate_operations, completion_rate_jobs
+
+    def getSumProcessingTime(self, this_machine_index) -> int:
+        sum_time = 0
+        for part in self.buffer_list:
+            sum_time += part.getProcessingTime(this_machine_index)
+        return sum_time
     # endregion
 
 
@@ -125,12 +134,35 @@ class OverPartBuffer:
             print(part.processing_data)
         return [part.processing_data for part in self.buffer_list]
 
-    def plotData(self, machine_num: int):
+    def plotData(self, machine_num: int, end_time: int, figsize=(6.6929134, 4), save_dir=None, plot_adjust=None):
         """plot gantt figure for shopfloor"""
+        matplotlib.rcParams.update({'font.size': 16})
+
+        # 一些计算
+        x_end = end_time % 5
+        x_end = 5 - x_end + end_time
+        calcute_mid_value = calculate_middle_value_in_gantt(x_end)
+        x_ticks = list(range(0, end_time, calcute_mid_value))
+        if x_ticks[-1] != end_time:
+            x_ticks.append(end_time)
+
         # 初始化图形和坐标轴范围
-        plt.figure(figsize=(20, 5))
+        plt.figure(figsize=figsize, dpi=300)
+        # 调整网格
+        if plot_adjust is not None:
+            plt.subplots_adjust(top=plot_adjust[0], bottom=plot_adjust[1], left=plot_adjust[2], right=plot_adjust[3])
+        # 调整网格线
+        ax = plt.gca()
+        for a in ["left", "top", "right", "bottom"]:
+            ax.spines[a].set_linewidth(1.5)
+        # ax.spines["right"].set_visible(False)
+        # ax.spines["top"].set_visible(False)
+        plt.grid(axis="x", zorder=-100)
         # 设置y轴标签和范围
         plt.yticks(range(machine_num), list(range(1, machine_num + 1)))
+        plt.xticks(x_ticks, x_ticks)
+        plt.xlim(0, x_end)
+
         plt.xlabel('Time Steps')
         plt.ylabel('Machine Numbers')
         # 添加额外的样式设置
@@ -145,5 +177,9 @@ class OverPartBuffer:
                 part_index=part.index + 1, color=distinct_colors_hex[i]
             )
             max_time_list.append(max_time)
-        plt.xlim(0, max(max_time_list))
+        # plt.xlim(0, max(max_time_list))
+        # 在结束的地方画一条竖线
+        plt.axvline(x=end_time, color="red", linestyle="--", zorder=150, linewidth=1)
         plt.show()
+        if save_dir is not None:
+            plt.savefig(save_dir)

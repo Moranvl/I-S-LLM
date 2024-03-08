@@ -16,14 +16,14 @@ class LlmAgent:
         self.cf = ConfigParser()
         self.cf.read('config.ini', encoding='utf-8')
 
-        self.temperature = self.cf.getfloat('global', 'temperature')
-
         self.model_name = model_name
         if model_name == "gpt":
             self.model = self.cf.get('gpt', 'model')
             api_key = self.cf.get('gpt', 'api_key')
             self.client = OpenAI(api_key=api_key)
+            self.temperature = self.cf.getfloat('gpt', 'temperature')
         elif model_name == "qwen":
+            self.temperature = self.cf.getfloat('qwen', 'temperature')
             api_key = self.cf.get('qwen', 'api_key')
             dashscope.api_key = api_key
             self.model = Generation.Models.qwen_max
@@ -103,11 +103,10 @@ class Machine2MachineAgentLLM(Machine2MachineAgent, LlmAgent):
         LlmAgent.__init__(self, model_name)
 
         self.machines = self.machine.machines
-        self.prompt = """You need choose a machine from the information from user.
-# Answers:
-- Only integers could be accepted.
-- Do not answer anything other else.
-        """
+        with open("intelligent_shopfloor_environment/prompts/machine_choosen_prompt.txt") as f:
+            self.machine_choose_prompt = f.read()
+        with open("intelligent_shopfloor_environment/prompts/machine_fitter_prompt.txt") as f:
+            self.machine_fitter_prompt = f.read()
 
     def decide(self) -> int:
         part: Part = self.machine.operate_part
@@ -116,25 +115,36 @@ class Machine2MachineAgentLLM(Machine2MachineAgent, LlmAgent):
         len_machine_list = len(machine_list)
         if len_machine_list == 1:
             return machine_list[0] - 1
-        elif len_machine_list >= 1:
+        elif len_machine_list > 1:
             bidding_documents = [
                 self.machines[machine_id - 1].generateDocument(part)
                 for machine_id in machine_list
             ]
             usr_prompt = self.generateUserPrompt(bidding_documents, part)
-            decision = self.text_generation(system_prompt=self.prompt, user_prompt=usr_prompt)
-            return int(decision) - 1
+            decision_form_llm = self.text_generation(system_prompt=self.machine_choose_prompt, user_prompt=usr_prompt)
+            decision = self.generateDecision(decision_form_llm, machine_list)
+            return decision
         else:
             raise ValueError(f"The length of machine list is wrong {len_machine_list}")
 
     def generateUserPrompt(self, documents, part: Part):
         now_index, length = part.getOperationIndex()
-        prompt = f"""This job still needs <{length-now_index}> operations and the number of total operation is {length}.
+        prompt = f"""# Job information:
+This job still needs <{length-now_index}> operations and the number of total operation is {length}.
 The bidding documents from available machine is:
-"""
+# Bidding documents from available machine:"""
         for doc in documents:
+            prompt += "\n"
             prompt += doc
         return prompt
+
+    def generateDecision(self, decision_form_llm, machine_list) -> int:
+        temp_machine_index_plus = self.text_generation(
+            system_prompt=self.machine_fitter_prompt, user_prompt=decision_form_llm
+        )
+        machine_index_plus = int(temp_machine_index_plus)
+        assert machine_index_plus in machine_list
+        return machine_index_plus - 1
 
 
 class WarseHouseAgentLLM(Machine2MachineAgent):

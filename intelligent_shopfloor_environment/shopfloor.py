@@ -115,9 +115,12 @@ class ShopFloor:
             self.timer.tickTick()
         print(f"End time step: {self.timer.time}")
 
-    def plotData(self):
-        self.over_parts.plotData(len(self.machines))
+    def plotData(self, figsize, save_dir, plot_adjust=None):
+        self.over_parts.plotData(
+            len(self.machines), end_time=self.timer.time, figsize=figsize, save_dir=save_dir, plot_adjust=plot_adjust
+        )
 
+    # region Get Information
     def getNextTimeStep(self) -> int:
         """
         compute next time step.
@@ -129,6 +132,10 @@ class ShopFloor:
             needing_time.remove(0)
         next_time_step = min(needing_time) + self.timer.time
         return next_time_step
+
+    def getMachineNum(self) -> int:
+        return len(self.machines)
+    # endregion
 
     def isOver(self) -> bool:
         over_list = [m.isOver() for m in self.machines]

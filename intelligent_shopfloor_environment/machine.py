@@ -177,10 +177,12 @@ class Machine:
             free_or_busy += f"<busy>, and I still need <{self.needingTime()}> time step to over this order."
             eariliest_time += self.part_over_time + part_need_time
         completion_rate_operations, completion_rate_jobs = self.pre_buffer.getCompletionRate()
+        sum_processing_time = self.pre_buffer.getSumProcessingTime(self._id)
 
-        prompt = f"""# Machine: {self._id}
+        prompt = f"""## Machine: {self._id}:
 The state of my machine is {free_or_busy}
-The length of my buffer is {self.pre_buffer.getLength()}.
+The length of my buffer is <{self.pre_buffer.getLength()}>.
+The sum of the processing times on me for the jobs in my buffer is <{sum_processing_time}>.
 My history utilization is <{self.getUtilization()}>.
 My average completion rate of operation is <{completion_rate_operations}>.
 My average completion rate of jobs is <{completion_rate_jobs}>.

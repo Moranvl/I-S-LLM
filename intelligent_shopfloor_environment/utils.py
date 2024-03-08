@@ -32,7 +32,7 @@ def analysisDataFile(filename: str) -> tuple[int, list[tuple]]:
     with open(filename, "r") as file:
         lines = [line.rstrip('\n') for line in file.readlines() if line.strip()]
     # title = [num for num in lines[0].strip("\t")]
-    title = [int(num) for num in lines[0].split('\t')]
+    title = [float(num) for num in lines[0].split()]
     content = [line.strip().split() for line in lines[1:]]
     content = [[int(num) for num in subcontent] for subcontent in content]
     assert len(content) == title[0]
@@ -41,7 +41,7 @@ def analysisDataFile(filename: str) -> tuple[int, list[tuple]]:
     partTupleList = [partStr2Dict(element) for element in content]
     assert len(partTupleList) == title[0]
 
-    return machine_num, partTupleList
+    return int(machine_num), partTupleList
 
 
 # endregion
@@ -52,10 +52,12 @@ def plot_gantt_one_part(
 ):
     """Plot gantt for one part. All parts must be plotted in one figure."""
     for order_index, (m_id, start, end) in enumerate(zip(machine_id, start_steps, end_steps)):
-        plt.barh(m_id - 1, end - start, left=start, align='center', color=color, edgecolor="black")
+        plt.barh(m_id - 1, end - start, left=start, align='center', color=color, edgecolor="black", zorder=100)
         plt.text(
             start + (end - start) / 2, m_id - 1, f"{part_index},{order_index + 1}",
-            ha="center", va='center', fontsize=8
+            ha="center", va='center', fontsize=8,
+            zorder=101
+            # fontweight="normal"
         )
 
     max_time = max(end_steps)
@@ -72,4 +74,18 @@ def generate_distinct_colors(n):
 
     colors = [rgb2hex(cmap(i)[:3]) for i in np.linspace(0, 1, min(n, cmap.N))]
     return colors[:n]  # 返回前n种颜色
+
+
+def calculate_middle_value_in_gantt(t):
+    result = int(t / 10)
+    if result < 5:
+        result = 5
+    elif result < 10:
+        result = 10
+    elif result < 20:
+        result = 20
+    else:
+        result =50
+
+    return result
 # endregion
