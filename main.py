@@ -17,7 +17,7 @@ def print_sf_and_plot_gantt(shopfloor: ShopFloor):
 
 if __name__ == '__main__':
     # print( analysisDataFile("./dataset/FJSSPinstances/1_Brandimarte/BrandimarteMk1.fjs") )
-    sf = ShopFloor("./dataset/FJSSPinstances/1_Brandimarte/BrandimarteMk1.fjs")
+    sf = ShopFloor("./dataset/FJSSPinstances/1_Brandimarte/BrandimarteMk5.fjs")
     sf.run()
     sf.plotData(figsize=(17, 8), save_dir=None, plot_adjust=[0.9, 0.1, 0.05, 0.95])
     # print_sf_and_plot_gantt(sf)

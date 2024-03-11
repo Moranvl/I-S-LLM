@@ -84,8 +84,10 @@ def calculate_middle_value_in_gantt(t):
         result = 10
     elif result < 20:
         result = 20
+    elif result < 50:
+        result = 50
     else:
-        result =50
+        result =100
 
     return result
 # endregion

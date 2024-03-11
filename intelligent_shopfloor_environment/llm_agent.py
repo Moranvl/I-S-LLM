@@ -102,7 +102,6 @@ class Machine2MachineAgentLLM(Machine2MachineAgent, LlmAgent):
         Machine2MachineAgent.__init__(self, self_machine)
         LlmAgent.__init__(self, model_name)
 
-        self.machines = self.machine.machines
         with open("intelligent_shopfloor_environment/prompts/machine_choosen_prompt.txt") as f:
             self.machine_choose_prompt = f.read()
         with open("intelligent_shopfloor_environment/prompts/machine_fitter_prompt.txt") as f:

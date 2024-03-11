@@ -2,6 +2,8 @@
 The shop floor Class is used to generate a shopfloor by files.
 The shop floor is the basic of this environment.
 """
+import numpy as np
+
 from intelligent_shopfloor_environment.machine import Machine, WareHouse
 from intelligent_shopfloor_environment.timer import TimeController
 from intelligent_shopfloor_environment.part import Part, OverPartBuffer
@@ -135,6 +137,14 @@ class ShopFloor:
 
     def getMachineNum(self) -> int:
         return len(self.machines)
+
+    def getTime(self) -> int:
+        return self.timer.time
+
+    def getUtilizationVariance(self) -> float:
+        utilization_list = np.array([m.getUtilization() for m in self.machines])
+        return np.var(utilization_list, ddof=1)
+
     # endregion
 
     def isOver(self) -> bool:
