@@ -48,17 +48,21 @@ def analysisDataFile(filename: str) -> tuple[int, list[tuple]]:
 
 # region Plot Gantt Figure
 def plot_gantt_one_part(
-        machine_id: list, start_steps: list, end_steps: list, part_index: int = 0, color: str = 'skyblue'
+        machine_id: list, start_steps: list, end_steps: list, part_index: int = 0, color: str = 'skyblue',
+        need_text: bool = True
 ):
     """Plot gantt for one part. All parts must be plotted in one figure."""
     for order_index, (m_id, start, end) in enumerate(zip(machine_id, start_steps, end_steps)):
-        plt.barh(m_id - 1, end - start, left=start, align='center', color=color, edgecolor="black", zorder=100)
-        plt.text(
-            start + (end - start) / 2, m_id - 1, f"{part_index},{order_index + 1}",
-            ha="center", va='center', fontsize=8,
-            zorder=101
-            # fontweight="normal"
+        plt.barh(
+            m_id - 1, end - start, height=0.6, left=start, align='center', color=color, edgecolor="black", zorder=100
         )
+        if need_text:
+            plt.text(
+                start + (end - start) / 2, m_id - 1, f"{part_index},{order_index + 1}",
+                ha="center", va='center', fontsize=8,
+                zorder=101
+                # fontweight="normal"
+            )
 
     max_time = max(end_steps)
     return max_time
@@ -78,16 +82,28 @@ def generate_distinct_colors(n):
 
 def calculate_middle_value_in_gantt(t):
     result = int(t / 10)
-    if result < 5:
+    if result <= 5:
         result = 5
-    elif result < 10:
+    elif result <= 10:
         result = 10
-    elif result < 20:
+    elif result <= 20:
         result = 20
-    elif result < 50:
+    elif result <= 50:
         result = 50
+    elif result <= 100:
+        result = 100
+    elif result <= 200:
+        result = 200
+    elif result <= 500:
+        result = 500
+    elif result <= 1000:
+        result = 1000
+    elif result <= 2000:
+        result = 2000
+    elif result <= 5000:
+        result = 5000
     else:
-        result =100
+        result =10000
 
     return result
 # endregion

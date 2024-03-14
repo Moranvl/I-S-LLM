@@ -9,6 +9,8 @@ from http import HTTPStatus
 import dashscope
 from dashscope import Generation
 from dashscope.api_entities.dashscope_response import Role
+import logging
+import tenacity
 
 
 class LlmAgent:
@@ -27,6 +29,7 @@ class LlmAgent:
             api_key = self.cf.get('qwen', 'api_key')
             dashscope.api_key = api_key
             self.model = Generation.Models.qwen_max
+            self.seed = self.cf.getfloat('qwen', "seed")
         else:
             raise ValueError("Error Model Name")
 
@@ -47,8 +50,10 @@ class LlmAgent:
 
         return completion.choices[0].message
 
-    @staticmethod
-    def qwen_text_generation(system_prompt: str, user_prompt: str, temperature=1.0):
+    @tenacity.retry(
+        wait=tenacity.wait_random_exponential(min=1, max=60), stop=tenacity.stop_after_attempt(6)
+    )
+    def qwen_text_generation(self, system_prompt: str, user_prompt: str, temperature=1.0):
         messages = [
             {'role': Role.SYSTEM, 'content': system_prompt},
             {'role': Role.USER, 'content': user_prompt}
@@ -59,7 +64,8 @@ class LlmAgent:
             result_format='message',  # set the result to be "message" format.
             stream=False,
             incremental_output=False,  # get streaming output incrementally
-            temperature=temperature
+            temperature=temperature,
+            seed=self.seed,
         )
         full_content = ''
         if response.status_code == HTTPStatus.OK:
@@ -69,6 +75,7 @@ class LlmAgent:
                 response.request_id, response.status_code,
                 response.code, response.message
             ))
+            raise Exception('wait for next request')
         return full_content
 
     def text_generation(self, system_prompt: str, user_prompt: str):
@@ -91,7 +98,9 @@ class Buffer2MachineAgentLLM(Buffer2MachineAgent, LlmAgent):
         """
 
     def decide(self) -> int:
-        return self.firstInFirstOut()
+        # return self.firstInFirstOut()
+        return self.shortestProcessingTime()
+        # return self.firstInLastOut()
 
     def getBufferLength(self):
         return self.pre_buffer.getLength()
@@ -101,6 +110,16 @@ class Machine2MachineAgentLLM(Machine2MachineAgent, LlmAgent):
     def __init__(self, self_machine, model_name="qwen"):
         Machine2MachineAgent.__init__(self, self_machine)
         LlmAgent.__init__(self, model_name)
+        self.shopfloor = self.machine.shopfloor
+
+        # logs
+        logging.basicConfig(
+            filename="./results/logs/machine2machine.log",  # 指定日志文件名
+            format='%(asctime)s %(message)s',  # 定义日志信息格式
+            filemode='w'
+        )  # 将文件模式设置为 "w"，以便写入。
+        self.logger = logger = logging.getLogger()
+        self.logger.setLevel(logging.DEBUG)
 
         with open("intelligent_shopfloor_environment/prompts/machine_choosen_prompt.txt") as f:
             self.machine_choose_prompt = f.read()
@@ -122,35 +141,86 @@ class Machine2MachineAgentLLM(Machine2MachineAgent, LlmAgent):
             usr_prompt = self.generateUserPrompt(bidding_documents, part)
             decision_form_llm = self.text_generation(system_prompt=self.machine_choose_prompt, user_prompt=usr_prompt)
             decision = self.generateDecision(decision_form_llm, machine_list)
+            # logs
+            self.logger.info("usr_prompt:")
+            self.logger.info(usr_prompt)
+            self.logger.info("decision_form_llm:")
+            self.logger.info(decision_form_llm)
+            self.logger.info("decision:")
+            self.logger.info(decision)
+
             return decision
         else:
             raise ValueError(f"The length of machine list is wrong {len_machine_list}")
 
     def generateUserPrompt(self, documents, part: Part):
         now_index, length = part.getOperationIndex()
-        prompt = f"""# Job information:
-This job still needs <{length-now_index}> operations and the number of total operation is {length}.
+        now_time_dict = part.getNowTimeDict()
+        mean, std = self.shopfloor.getUtilizationMeanAndVariance()
+        prompt = f"""# Shopfloor Information:
+The average utilization rate of this shopfloor is {mean}, and the variance of utilization rate is {std}.
+# Job information:
+This job still needs <{length - now_index}> operations and the number of total operation is {length}.
 The bidding documents from available machine is:
 # Bidding documents from available machine:"""
         for doc in documents:
             prompt += "\n"
             prompt += doc
+        prompt += "\n# Reference answer"
+        prompt += f"\n- SMPT: {self.shortestProcessingTime(now_time_dict) + 1}"
+        prompt += f"\n- NINQ: {self.shortestBuffer(now_time_dict) + 1}"
+        prompt += f"\n- WINQ: {self.smallestWorkload(now_time_dict) + 1}"
         return prompt
 
     def generateDecision(self, decision_form_llm, machine_list) -> int:
-        temp_machine_index_plus = self.text_generation(
-            system_prompt=self.machine_fitter_prompt, user_prompt=decision_form_llm
-        )
-        machine_index_plus = int(temp_machine_index_plus)
+        try:
+            machine_index_plus = int(decision_form_llm)
+        except ValueError:
+            temp_machine_index_plus = self.text_generation(
+                system_prompt=self.machine_fitter_prompt, user_prompt=decision_form_llm
+            )
+            machine_index_plus = int(temp_machine_index_plus)
+
         assert machine_index_plus in machine_list
         return machine_index_plus - 1
 
 
-class WarseHouseAgentLLM(Machine2MachineAgent):
+class WarseHouseAgentLLM(Machine2MachineAgentLLM):
     def __init__(self, self_machine):
         super().__init__(self_machine)
+        # logs
+        logging.basicConfig(
+            filename="./results/logs/wharehouse.log",  # 指定日志文件名
+            format='%(asctime)s %(message)s',  # 定义日志信息格式
+            filemode='w'
+        )  # 将文件模式设置为 "w"，以便写入。
+        self.logger = logger = logging.getLogger()
+        self.logger.setLevel(logging.DEBUG)
 
     def decideByPart(self, part: Part) -> int:
         """define which machine to be choosen."""
-        now_time_dict = part.getNowTimeDict()
-        return self.shortestProcessingTime(now_time_dict)
+        # now_time_dict = part.getNowTimeDict()
+        # return self.shortestProcessingTime(now_time_dict)
+        machine_list = part.getProcessingMachineList()
+        len_machine_list = len(machine_list)
+        if len_machine_list == 1:
+            return machine_list[0] - 1
+        elif len_machine_list > 1:
+            bidding_documents = [
+                self.machines[machine_id - 1].generateDocument(part)
+                for machine_id in machine_list
+            ]
+            usr_prompt = self.generateUserPrompt(bidding_documents, part)
+            decision_form_llm = self.text_generation(system_prompt=self.machine_choose_prompt, user_prompt=usr_prompt)
+            decision = self.generateDecision(decision_form_llm, machine_list)
+            # logs
+            self.logger.info("usr_prompt:")
+            self.logger.info(usr_prompt)
+            self.logger.info("decision_form_llm:")
+            self.logger.info(decision_form_llm)
+            self.logger.info("decision:")
+            self.logger.info(decision)
+
+            return decision
+        else:
+            raise ValueError(f"The length of machine list is wrong {len_machine_list}")

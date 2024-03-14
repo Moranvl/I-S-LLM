@@ -32,10 +32,12 @@ class Buffer2MachineAgent(Agent):
     def __init__(self, self_machine):
         super().__init__(self_machine)
         self.pre_buffer = self.machine.pre_buffer
+        self.machine_id = self.machine.getID()
 
     def decide(self) -> int:
-        return self.firstInFirstOut()
+        # return self.firstInFirstOut()
         # return self.firstInLastOut()
+        return self.shortestProcessingTime()
 
     @staticmethod
     def firstInFirstOut() -> int:
@@ -44,12 +46,19 @@ class Buffer2MachineAgent(Agent):
     def firstInLastOut(self) -> int:
         return self.pre_buffer.getLength() - 1
 
+    def shortestProcessingTime(self) -> int:
+        """SPT: Selects the job with the shortest processing time"""
+        processing_time_list = self.pre_buffer.getProcessingTimeList(self.machine_id)
+        min_processing_time = min(processing_time_list)
+        return processing_time_list.index(min_processing_time)
+
 
 class Machine2MachineAgent(Agent):
     def __init__(self, self_machine):
         super().__init__(self_machine)
         self.buffers = [m.pre_buffer for m in self.machines]
         self.decide_rules = self.shortestProcessingTime
+        # self.decide_rules = self.randomChooser
 
     def decide(self) -> int:
         """define which machine to be choosen."""
@@ -97,4 +106,4 @@ class WarseHouseAgent(Machine2MachineAgent):
     def decideByPart(self, part: Part) -> int:
         """define which machine to be choosen."""
         now_time_dict = part.getNowTimeDict()
-        return self.shortestProcessingTime(now_time_dict)
+        return self.decide_rules(now_time_dict)

@@ -112,6 +112,9 @@ class PartBuffer:
         for part in self.buffer_list:
             sum_time += part.getProcessingTime(this_machine_index)
         return sum_time
+
+    def getProcessingTimeList(self, this_machine_index) -> list:
+        return [p.getProcessingTime(this_machine_index) for p in self.buffer_list]
     # endregion
 
 
@@ -134,7 +137,10 @@ class OverPartBuffer:
             print(part.processing_data)
         return [part.processing_data for part in self.buffer_list]
 
-    def plotData(self, machine_num: int, end_time: int, figsize=(6.6929134, 4), save_dir=None, plot_adjust=None):
+    def plotData(
+            self, machine_num: int, end_time: int, figsize=(6.6929134, 4), save_dir=None, plot_adjust=None,
+            need_text=True
+    ):
         """plot gantt figure for shopfloor"""
         matplotlib.rcParams.update({'font.size': 16})
 
@@ -144,7 +150,10 @@ class OverPartBuffer:
         calcute_mid_value = calculate_middle_value_in_gantt(x_end)
         x_ticks = list(range(0, end_time, calcute_mid_value))
         if x_ticks[-1] != end_time:
-            x_ticks.append(end_time)
+            if end_time - x_ticks[-1] < calcute_mid_value * 0.3:
+                x_ticks[-1] = end_time
+            else:
+                x_ticks.append(end_time)
 
         # 初始化图形和坐标轴范围
         plt.figure(figsize=figsize, dpi=300)
@@ -159,12 +168,13 @@ class OverPartBuffer:
         # ax.spines["top"].set_visible(False)
         plt.grid(axis="x", zorder=-100)
         # 设置y轴标签和范围
-        plt.yticks(range(machine_num), list(range(1, machine_num + 1)))
+        plt.yticks(range(machine_num), [f"M{index}" for index in list(range(1, machine_num + 1))])
         plt.xticks(x_ticks, x_ticks)
         plt.xlim(0, x_end)
+        plt.ylim(-1, machine_num)
 
         plt.xlabel('Time Steps')
-        plt.ylabel('Machine Numbers')
+        plt.ylabel('Machines')
         # 添加额外的样式设置
         plt.title('Gantt Chart')
         # plt.grid(axis='x')
@@ -174,12 +184,12 @@ class OverPartBuffer:
         for i, part in enumerate(self.buffer_list):
             max_time = plot_gantt_one_part(
                 part.processing_data[0], part.processing_data[1], part.processing_data[2],
-                part_index=part.index + 1, color=distinct_colors_hex[i]
+                part_index=part.index + 1, color=distinct_colors_hex[i], need_text=need_text
             )
             max_time_list.append(max_time)
         # plt.xlim(0, max(max_time_list))
         # 在结束的地方画一条竖线
         plt.axvline(x=end_time, color="red", linestyle="--", zorder=150, linewidth=1)
-        plt.show()
         if save_dir is not None:
-            plt.savefig(save_dir)
+            plt.savefig(save_dir, dpi=1200)
+        plt.show()

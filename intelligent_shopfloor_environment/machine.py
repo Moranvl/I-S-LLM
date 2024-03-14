@@ -23,8 +23,9 @@ class Machine:
         self.agent_buffer2machine: Agent or None = None
         self.agent_machine2machine: Agent or None = None
 
-        # get the pointer of the machines.
+        # get the pointer of the machines and shopfloor.
         self.machines: tuple[Machine] or None = None
+        self.shopfloor = None
         # get the pointer of the over part buffer
         self.over_part_buffer: OverPartBuffer = over_part_buffer
         # get the pointer of the timer
@@ -41,8 +42,9 @@ class Machine:
     def defineMachine(self, machines: tuple):
         """get the machines after the machine is generated."""
         self.machines = machines
-        self.agent_buffer2machine: Agent or None = None
-        self.agent_buffer2machine: Agent or None = None
+
+    def defineShopfloor(self, shopfloor):
+        self.shopfloor = shopfloor
 
     def defineAgent(self, buffer2machine_agent: Agent, machine2machine_agent: Agent) -> None:
         """define the agent."""
@@ -114,11 +116,15 @@ class Machine:
 
     def getUtilization(self) -> float:
         t = self.timer.time
-        if self.isMachineFree():
+        if t == 0:
+            return 0
+        elif self.isMachineFree():
             return self.accumulate_work_time / t
         else:
             return (self.accumulate_work_time - self.part_start_time) / t + 1
 
+    def getID(self) -> int:
+        return self._id
     # endregion
 
     def reset(self):

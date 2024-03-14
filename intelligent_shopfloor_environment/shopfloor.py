@@ -34,6 +34,8 @@ class ShopFloor:
 
         # Initialize the Shop-floor.
         self.initialize_shopfloor()
+        # Define shopfloor of the machines
+        self.define_shopfloor()
         # Initialize the agents.
         self.initialize_agents()
 
@@ -64,6 +66,12 @@ class ShopFloor:
             buffer2machine_agent=Agent(self.generate_warehouse),
             machine2machine_agent=WarseHouseAgent(self.generate_warehouse),
         )
+
+    def define_shopfloor(self) -> None:
+        """define the shopfloor from machines"""
+        for m in self.machines:
+            m.defineShopfloor(self)
+        self.generate_warehouse.defineShopfloor(self)
 
     def generate_machines(self, machine_len: int) -> tuple[Machine, ...]:
         """
@@ -117,9 +125,10 @@ class ShopFloor:
             self.timer.tickTick()
         print(f"End time step: {self.timer.time}")
 
-    def plotData(self, figsize, save_dir, plot_adjust=None):
+    def plotData(self, figsize, save_dir, plot_adjust=None, need_text=True):
         self.over_parts.plotData(
-            len(self.machines), end_time=self.timer.time, figsize=figsize, save_dir=save_dir, plot_adjust=plot_adjust
+            len(self.machines), end_time=self.timer.time, figsize=figsize, save_dir=save_dir, plot_adjust=plot_adjust,
+            need_text=need_text
         )
 
     # region Get Information
@@ -141,9 +150,13 @@ class ShopFloor:
     def getTime(self) -> int:
         return self.timer.time
 
-    def getUtilizationVariance(self) -> float:
+    def getUtilizationMeanAndVariance(self) -> tuple[float, ...]:
         utilization_list = np.array([m.getUtilization() for m in self.machines])
-        return np.var(utilization_list, ddof=1)
+        return np.mean(utilization_list), np.var(utilization_list, ddof=1)
+
+    def getUtilizationVariance(self) -> float:
+        _, variance = self.getUtilizationMeanAndVariance()
+        return variance
 
     # endregion
 
